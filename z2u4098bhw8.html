@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>$[[[d</title>
+    <style>
+
+:root {
+  scrollbar-color: lime blue;  /* Firefox */
+  scrollbar-width: auto;
+}
+
+body {
+  overflow: scroll;
+  margin: 0;
+  background: black;
+}
+
+/* Chrome */
+body::-webkit-scrollbar-thumb  { background: lime; }
+body::-webkit-scrollbar        { background: blue; }
+body::-webkit-scrollbar-corner { background: blue; }
+
+    </style>
+  </head>
+  <body>
+
+<div></div>
+
+    <script>
+
+const MIN = 100;
+const MAX = 350;
+const HUGE = 9999999;
+
+let isIncrement = true;
+let size = MIN;
+const div = document.querySelector('div');
+div.style.width  = size + 'vw';
+div.style.height = size + 'vh';
+
+const setIntervalFunction = () => setInterval(() => {
+  size = isIncrement ? (size + 1) : (size - 1);
+  div.style.width  = size + 'vw';
+  div.style.height = size + 'vh';
+  window.scroll(HUGE, HUGE);
+  if(size >= MAX || size <= MIN) isIncrement = !isIncrement;
+}, 0);
+
+let timer = setIntervalFunction();  // Init
+
+document.addEventListener('keydown', event => {
+  if(event.key.startsWith('Esc')) timer = timer ? clearInterval(timer) : setIntervalFunction();  // Stop Or Restart
+});
+
+    </script>
+  </body>
+</html>

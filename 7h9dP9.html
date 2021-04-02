@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>a1sQuv3</title>
+    <style>
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, div {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-size: 0;
+  background: black;
+  user-select: none;
+}
+
+b, i, u {
+  display: inline-block;
+  border-style: solid;
+}
+
+b { border-color: green      ; background: black      ; }  /* Blank */
+i { border-color: greenyellow; background: greenyellow; }  /* Current Block */
+u { border-color: lime       ; background: lime       ; }  /* Block */
+
+div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+pre {
+  margin: 0;
+  border-style: solid;
+  border-color: darkgreen;
+}
+
+body.paused pre {
+  border-color: darkgoldenrod;
+}
+
+body.finished pre {
+  border-color: maroon;
+}
+
+    </style>
+  </head>
+  <body>
+
+<div><pre></pre></div>
+
+    <script>
+
+// Constants
+const DEFAULT_SQUARE_SIZE   = 10;
+const DEFAULT_SQUARE_MARGIN =  1;
+const SAFE_MAX_GRID_WIDTH   = 30;
+const SAFE_MAX_GRID_HEIGHT  = 30;
+const DEFAULT_SHAPE_WIDTH   =  4;
+const DEFAULT_SHAPE_HEIGHT  =  4;
+const DEFAULT_INTERVAL      = 10;
+
+// Global Variables (With Default Value)
+let SQUARE_SIZE      = DEFAULT_SQUARE_SIZE;
+let SQUARE_MARGIN    = DEFAULT_SQUARE_MARGIN;
+let GRID_WIDTH       = SAFE_MAX_GRID_WIDTH;
+let GRID_HEIGHT      = SAFE_MAX_GRID_HEIGHT;
+let MAX_SHAPE_WIDTH  = DEFAULT_SHAPE_WIDTH;
+let MAX_SHAPE_HEIGHT = DEFAULT_SHAPE_HEIGHT;
+let INTERVAL         = DEFAULT_INTERVAL;
+
+const CANVAS = (() => {  // Create Canvas
+  const params = [...new URLSearchParams(location.search)].reduce((acc, pair) => ({...acc, [pair[0]]: pair[1]}), {});
+  
+  INTERVAL = getNumber(params.interval, DEFAULT_INTERVAL);
+  if(INTERVAL < 0) INTERVAL = 0;
+  MAX_SHAPE_WIDTH = getNumber(params.maxShapeWidth, DEFAULT_SHAPE_WIDTH);
+  if(MAX_SHAPE_WIDTH <= 0) MAX_SHAPE_WIDTH = DEFAULT_SHAPE_WIDTH;
+  MAX_SHAPE_HEIGHT = getNumber(params.maxShapeHeight, DEFAULT_SHAPE_HEIGHT);
+  if(MAX_SHAPE_HEIGHT <= 0) MAX_SHAPE_HEIGHT = DEFAULT_SHAPE_HEIGHT;
+  
+  SQUARE_SIZE = getNumber(params.squareSize, DEFAULT_SQUARE_SIZE);
+  if(SQUARE_SIZE < DEFAULT_SQUARE_SIZE) SQUARE_SIZE = DEFAULT_SQUARE_SIZE;
+  SQUARE_MARGIN = getNumber(params.squareMargin, DEFAULT_SQUARE_MARGIN);
+  if(SQUARE_MARGIN < DEFAULT_SQUARE_MARGIN) SQUARE_MARGIN = DEFAULT_SQUARE_MARGIN;
+  const borderSize = SQUARE_MARGIN;
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    b, i, u {
+      width: ${SQUARE_SIZE}px;
+      height: ${SQUARE_SIZE}px;
+      margin: 0 ${SQUARE_MARGIN}px ${SQUARE_MARGIN}px 0;
+      border-width: ${borderSize}px;
+    }
+    pre {
+      border-width: ${borderSize}px;
+      padding: ${SQUARE_MARGIN}px 0 0 ${SQUARE_MARGIN}px;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  const squareOuterSize = SQUARE_SIZE + SQUARE_MARGIN;
+  const outerMargins    = borderSize + SQUARE_MARGIN + borderSize;
+  GRID_WIDTH = getNumber(params.gridWidth, Math.floor(document.documentElement.clientWidth / squareOuterSize) - outerMargins);
+  if(!params.ignoreMaxGridWidth && GRID_WIDTH > SAFE_MAX_GRID_WIDTH) GRID_WIDTH = SAFE_MAX_GRID_WIDTH;  // Safe Mode (Normal)
+  if(GRID_WIDTH < MAX_SHAPE_WIDTH) GRID_WIDTH = MAX_SHAPE_WIDTH;  // Avoid Overhang
+  GRID_HEIGHT = getNumber(params.gridHeight, Math.floor(document.documentElement.clientHeight / squareOuterSize) - outerMargins);
+  if(!params.ignoreMaxGridHeight && GRID_HEIGHT > SAFE_MAX_GRID_HEIGHT) GRID_HEIGHT = SAFE_MAX_GRID_HEIGHT;  // Safe Mode (Normal)
+  if(GRID_HEIGHT < MAX_SHAPE_HEIGHT) GRID_HEIGHT = MAX_SHAPE_HEIGHT;  // Avoid Overhang
+  
+  const canvas = document.querySelector('pre');
+  canvas.style.width  = `${(squareOuterSize * GRID_WIDTH ) + outerMargins}px`;
+  canvas.style.height = `${(squareOuterSize * GRID_HEIGHT) + outerMargins}px`;
+  return canvas;
+  
+  function getNumber(param, defaultNum) {
+    try {
+      if(param == null) return defaultNum;
+      const num = Number.parseInt(Number(param).toFixed(0), 10);
+      return Number.isNaN(num) ? defaultNum : num;
+    }
+    catch(_error) {
+      return defaultNum;
+    }
+  }
+})();
+
+const GRID = [...Array(GRID_HEIGHT)].map(() => Array(GRID_WIDTH).fill({ isBlank: true, isCurrent: false }));  // Create Grid
+draw();  // First Look
+
+let isAddMode = true;  // Add Mode (true) Or Down Mode (false)
+let timer = null;
+const intervalFunction = () => setInterval(() => {
+  if(!isAddMode) {
+    const isDownedShape = downShape();
+    if(isDownedShape) return;
+    isAddMode = true;  // Touched At Bottom Or Other Shapes, Then Add Mode (Next Shape)
+  }
+  const isAddedShape = addShape();
+  if(isAddedShape) return isAddMode = false;  // Down Mode
+  
+  timer = clearInterval(timer);
+  resetGrid();
+  draw();
+  document.body.classList.add('finished');
+}, INTERVAL);
+timer = intervalFunction();
+
+const userEvent = () => {
+  if(timer) {
+    timer = clearInterval(timer);
+    document.body.classList.add('paused');
+  }
+  else if(![...document.body.classList].includes('finished')) {
+    document.body.classList.remove('paused');
+    timer = intervalFunction();
+  }
+  else {
+    GRID.forEach(line => line.forEach(square => { square.isBlank = true; square.isCurrent = false; }));
+    draw();
+    document.body.classList.remove('paused', 'finished');
+    timer = intervalFunction();
+  }
+};
+document.addEventListener('keydown', event => {
+  if(event.key.startsWith('Esc')) userEvent();
+});
+document.addEventListener('touchend', userEvent);
+
+function draw() {
+  CANVAS.innerHTML = GRID.reduce((lineHtml, line, index) => lineHtml
+    + line.reduce((columnHtml, square) => columnHtml + (square.isBlank ? '<b></b>' : square.isCurrent ? '<i></i>' : '<u></u>'), '')
+    + (index < GRID.length - 1 ? '<br>' : '')
+  , '');
+}
+
+function resetGrid() {
+  GRID.forEach(line => line.forEach(square => square.isCurrent = false));
+}
+
+function addShape() {
+  const shape = createShape();
+  const shapeWidth  = Math.max(...shape.map(line => line.length));
+  const shapeHeight = shape.length;
+  
+  const topLeftColumnIndexes = fisherYatesShuffle([...Array(GRID_WIDTH).keys()]);
+  const topLeftColumnIndex = topLeftColumnIndexes.find(currentTopLeftColumnIndex => hasInitialSpace(shape, shapeWidth, shapeHeight, currentTopLeftColumnIndex));
+  if(topLeftColumnIndex == null) return false;  // No Initial Spaces
+  
+  resetGrid();
+  for(let lineIndex = 0; lineIndex < shapeHeight; lineIndex++) {
+    for(let columnIndex = 0; columnIndex < shapeWidth; columnIndex++) {
+      if(!shape[lineIndex][columnIndex].isBlank) GRID[lineIndex][topLeftColumnIndex + columnIndex] = shape[lineIndex][columnIndex];  // Block Squares Only
+    }
+  }
+  draw();
+  return true;
+  
+  function createShape() {
+    /* FIXME */const debugPreview = () => console.log(shape.reduce((lineText, line, index) => lineText
+      + line.reduce((columnText, square) => `${columnText}${square.isBlank ? '□' : '■'}`, '')
+      + (index < shape.length - 1 ? '\n' : '')
+    , ''));
+    
+    const shapeWidth  = Math.floor(Math.random() * MAX_SHAPE_WIDTH  + 1);
+    const shapeHeight = Math.floor(Math.random() * MAX_SHAPE_HEIGHT + 1);
+    
+    const shape = [];
+    for(let lineIndex = 0; lineIndex < shapeHeight; lineIndex++) {
+      const line = [];
+      for(let columnIndex = 0; columnIndex < shapeWidth; columnIndex++) {
+        const isBlank = Boolean(Math.random() < .5);
+        line.push({ isBlank: isBlank, isCurrent: !isBlank });
+      }
+      if(line.every(square => square.isBlank)) line[Math.floor(Math.random() * shapeWidth)] = { isBlank: false, isCurrent: true };  // At Least One Block Per One Line
+      shape.push(line);
+    }
+    [...Array(shapeWidth).keys()].forEach(columnIndex => {  // At Least One Block Per One Column
+      if(shape.map(line => line[columnIndex]).every((square => square.isBlank))) shape[Math.floor(Math.random() * shapeHeight)][columnIndex] = { isBlank: false, isCurrent: true };
+    });
+    
+    adjustShape();
+    return shape;
+    
+    function adjustShape(debugDepth) {  // FIXME : Incomplete Shape
+      if(debugDepth == null) { debugDepth = 1; } /* FIXME *///console.log(`Adjust [${debugDepth}]`);
+      
+      let isAdjusted = false;
+      for(let lineIndex = 0; lineIndex < shapeHeight; lineIndex++) {
+        for(let columnIndex = 0; columnIndex < shapeWidth; columnIndex++) {
+          const sides = [
+            //{
+            //  side       : 'top-left',
+            //  lineIndex  : lineIndex   - 1,
+            //  columnIndex: columnIndex - 1
+            //},
+            {
+              side       : 'top',
+              lineIndex  : lineIndex   - 1,
+              columnIndex: columnIndex
+            },
+            //{
+            //  side       : 'top-right',
+            //  lineIndex  : lineIndex   - 1,
+            //  columnIndex: columnIndex + 1
+            //},
+            {
+              side       : 'right',
+              lineIndex  : lineIndex      ,
+              columnIndex: columnIndex + 1
+            },
+            //{
+            //  side       : 'bottom-right',
+            //  lineIndex  : lineIndex   + 1,
+            //  columnIndex: columnIndex + 1
+            //},
+            {
+              side       : 'bottom',
+              lineIndex  : lineIndex   + 1,
+              columnIndex: columnIndex
+            },
+            //{
+            //  side       : 'bottom-left',
+            //  lineIndex  : lineIndex   + 1,
+            //  columnIndex: columnIndex - 1
+            //},
+            {
+              side       : 'left',
+              lineIndex  : lineIndex      ,
+              columnIndex: columnIndex - 1
+            }
+          ];
+          sides.forEach(side => side.status = checkSquareStatus(side.lineIndex, side.columnIndex));
+          
+          if(shape[lineIndex][columnIndex].isBlank) {
+            continue;
+          }
+          else {
+            if(sides.every(side => ['blank', 'out'].includes(side.status))) {
+              const blankSides = sides.filter(side => side.status === 'blank');
+              if(!blankSides.length) continue;  // One By One Shape
+              const addSide = blankSides[Math.floor(Math.random() * blankSides.length)];
+              shape[addSide.lineIndex][addSide.columnIndex] = { isBlank: false, isCurrent: true };
+              isAdjusted = true;
+              /* FIXME *///console.log(`  Add ${addSide.side}`); debugPreview();
+            }
+          }
+        }
+      }
+      if(isAdjusted) adjustShape(debugDepth + 1);
+    }
+    
+    function checkSquareStatus(lineIndex, columnIndex) {
+      if(lineIndex < 0 || columnIndex < 0 || lineIndex >= shapeHeight || columnIndex >= shapeWidth) return 'out';
+      return shape[lineIndex][columnIndex].isBlank ? 'blank' : 'block';
+    }
+  }
+  
+  function fisherYatesShuffle(array) {
+    for(let index = array.length - 1; index >= 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [array[index], array[randomIndex]] = [array[randomIndex], array[index]];
+    }
+    return array;
+  }
+  
+  function hasInitialSpace(shape, shapeWidth, shapeHeight, topLeftColumnIndex) {
+    for(let lineIndex = 0; lineIndex < shapeHeight; lineIndex++) {
+      for(let columnIndex = 0; columnIndex < shapeWidth; columnIndex++) {
+        if(topLeftColumnIndex + columnIndex >= GRID_WIDTH) return false;  // Out Of Grid
+        if(!shape[lineIndex][columnIndex].isBlank && !GRID[lineIndex][topLeftColumnIndex + columnIndex].isBlank) return false;
+      }
+    }
+    return true;
+  }
+}
+
+function downShape() {
+  for(let lineIndex = GRID_HEIGHT - 1; lineIndex >= 0; lineIndex--) {  // Pre-Check : `- 1` : Decrement For Index
+    for(let columnIndex = 0; columnIndex < GRID_WIDTH; columnIndex++) {
+      const currentSquare  = GRID[lineIndex][columnIndex];
+      if(lineIndex + 1 === GRID_HEIGHT) {
+        if(currentSquare.isCurrent && !currentSquare.isBlank) return false;  // Touched At Bottom
+        continue;
+      }
+      const nextLineSquare = GRID[lineIndex + 1][columnIndex];
+      if(currentSquare.isCurrent && !nextLineSquare.isCurrent && !currentSquare.isBlank && !nextLineSquare.isBlank) return false;  // Touched With Other Shape
+    }
+  }
+  for(let lineIndex = GRID_HEIGHT - 2; lineIndex >= 0; lineIndex--) {  // Move Down : `- 2` : Decrement For Index & Ignore Final Line
+    for(let columnIndex = 0; columnIndex < GRID_WIDTH; columnIndex++) {
+      const currentSquare = GRID[lineIndex][columnIndex];
+      if(currentSquare.isCurrent) {
+        GRID[lineIndex + 1][columnIndex] = currentSquare;
+        GRID[lineIndex    ][columnIndex] = { isBlank: true, isCurrent: false };
+      }
+    }
+  }
+  draw();
+  return true;
+}
+
+    </script>
+  </body>
+</html>
