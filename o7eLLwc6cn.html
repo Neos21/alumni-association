@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Q:666</title>
+    <style>
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, div {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-size: 0;
+  background: black;
+  user-select: none;
+}
+
+i {
+  display: inline-block;
+  border-style: solid;
+  border-color: green;  /* Blank */
+  background: black;
+}
+
+i.block {
+  border-color: lime;
+  background: lime;
+}
+
+i.block.current {
+  border-color: darkred;
+  background: darkred;
+}
+
+div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+pre {
+  margin: 0;
+}
+
+body.finished i {
+  border-color: goldenrod;
+}
+
+body.finished i.block {
+  border-color: gold;
+  background: gold;
+}
+
+body.finished i.block.current {
+  border-color: red;
+  background: red;
+}
+
+    </style>
+  </head>
+  <body>
+
+<div><pre></pre></div>
+
+    <script>
+
+// Constants
+const DEFAULT_SQUARE_SIZE   = 20;
+const DEFAULT_SQUARE_MARGIN =  2;
+const DEFAULT_GRID_WIDTH    = 10;
+const DEFAULT_GRID_HEIGHT   = 10;
+const DEFAULT_INTERVAL      = 20;
+
+// Global Variables (With Default Value)
+let GRID_WIDTH  = DEFAULT_GRID_WIDTH;
+let GRID_HEIGHT = DEFAULT_GRID_HEIGHT;
+let INTERVAL    = DEFAULT_INTERVAL;
+
+const CANVAS = (() => {  // Create Canvas
+  let squareSize   = DEFAULT_SQUARE_SIZE;
+  let squareMargin = DEFAULT_SQUARE_MARGIN;
+  
+  const params = [...new URLSearchParams(location.search)].reduce((acc, pair) => ({...acc, [pair[0]]: pair[1]}), {});
+  
+  INTERVAL = getNumber(params.interval, DEFAULT_INTERVAL);
+  if(INTERVAL < 0) INTERVAL = 0;
+  squareSize = getNumber(params.squareSize, DEFAULT_SQUARE_SIZE);
+  if(squareSize < DEFAULT_SQUARE_SIZE) squareSize = DEFAULT_SQUARE_SIZE;
+  squareMargin = getNumber(params.squareMargin, DEFAULT_SQUARE_MARGIN);
+  if(squareMargin < DEFAULT_SQUARE_MARGIN) squareMargin = DEFAULT_SQUARE_MARGIN;
+  const borderSize = squareMargin;
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    i {
+      width: ${squareSize}px;
+      height: ${squareSize}px;
+      margin: 0 ${squareMargin}px ${squareMargin}px 0;
+      border-width: ${borderSize}px;
+    }
+    pre {
+      padding: ${squareMargin}px 0 0 ${squareMargin}px;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  const squareOuterSize = squareSize + squareMargin;
+  GRID_WIDTH  = getNumber(params.gridWidth , Math.floor(document.documentElement.clientWidth  / squareOuterSize) - squareMargin);
+  GRID_HEIGHT = getNumber(params.gridHeight, Math.floor(document.documentElement.clientHeight / squareOuterSize) - squareMargin);
+  if(GRID_WIDTH  < 0) GRID_WIDTH  = DEFAULT_GRID_WIDTH;
+  if(GRID_HEIGHT < 0) GRID_HEIGHT = DEFAULT_GRID_HEIGHT;
+  
+  const canvas = document.querySelector('pre');
+  canvas.style.width  = `${(squareOuterSize * GRID_WIDTH ) + squareMargin}px`;
+  canvas.style.height = `${(squareOuterSize * GRID_HEIGHT) + squareMargin}px`;
+  return canvas;
+  
+  function getNumber(param, defaultNum) {
+    try {
+      if(param == null) return defaultNum;
+      const num = Number.parseInt(Number(param).toFixed(0), 10);
+      return Number.isNaN(num) ? defaultNum : num;
+    }
+    catch(_error) {
+      return defaultNum;
+    }
+  }
+})();
+
+// Create Grid
+CANVAS.innerHTML = [...Array(GRID_HEIGHT).keys()].reduce((lineHtml, lineIndex) => lineHtml
+  + [...Array(GRID_WIDTH).keys()].reduce((columnHtml, columnIndex) => `${columnHtml}<i data-line-index="${lineIndex}" data-column-index="${columnIndex}"></i>`, '')
+  + (lineIndex < GRID_HEIGHT - 1 ? '<br>' : '')
+, '');
+
+// Draw First Square
+let prevLineIndex      = -1;
+let prevColumnIndex    = -1;
+let currentLineIndex   =  0;
+let currentColumnIndex =  0;
+
+const waitInterval = Math.max(250, INTERVAL);
+let timer = setIntervalFunction();
+
+function setIntervalFunction() {
+  prevLineIndex      = -1;
+  prevColumnIndex    = -1;
+  currentLineIndex   = Math.floor(Math.random() * GRID_HEIGHT);
+  currentColumnIndex = Math.floor(Math.random() * GRID_WIDTH );
+  return setInterval(drawSquare, INTERVAL);
+}
+
+function drawSquare() {
+  const currentElement = document.querySelector(`i[data-line-index="${currentLineIndex}"][data-column-index="${currentColumnIndex}"]`);
+  const nearElements = [];
+  [
+    { lineIndex: currentLineIndex - 1, columnIndex: currentColumnIndex     },  // Top
+    { lineIndex: currentLineIndex    , columnIndex: currentColumnIndex + 1 },  // Right
+    { lineIndex: currentLineIndex + 1, columnIndex: currentColumnIndex     },  // Bottom
+    { lineIndex: currentLineIndex    , columnIndex: currentColumnIndex - 1 }   // Left
+  ].forEach(near => {
+    if(prevLineIndex === near.lineIndex && prevColumnIndex === near.columnIndex) return;  // This Near Square Is Previous Square
+    const nearElement = document.querySelector(`i[data-line-index="${near.lineIndex}"][data-column-index="${near.columnIndex}"]`);
+    if(!nearElement) return;  // This Near Square Does Not Exist (Because Current Square Is Located On The Edge)
+    if(nearElement.classList.contains('block')) return;  // Exclude Block Square
+    nearElements.push({ element: nearElement, lineIndex: near.lineIndex, columnIndex: near.columnIndex });
+  });
+  
+  if(nearElements.length) {
+    const nextElement = nearElements[Math.floor(Math.random() * nearElements.length)];
+    currentElement.classList.remove('current');
+    nextElement.element.classList.add('block', 'current');
+    prevLineIndex      = currentLineIndex;
+    prevColumnIndex    = currentColumnIndex;
+    currentLineIndex   = nextElement.lineIndex;
+    currentColumnIndex = nextElement.columnIndex;
+  }
+  else {
+    timer = clearInterval(timer);
+    document.body.classList.add('finished');
+    setTimeout(() => {
+      const elements = [...document.querySelectorAll('i.block')];
+      elements.forEach(element => element.classList.remove('block'));
+      document.body.classList.remove('finished');
+      timer = setIntervalFunction();
+    }, waitInterval);
+  }
+}
+
+    </script>
+  </body>
+</html>
