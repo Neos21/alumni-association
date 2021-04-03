@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Hj,,jfk</title>
+    <style>
+
+html, body, div {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #111;
+}
+
+div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+canvas {
+  background: #f0f0f0;
+  outline: 16px solid #f0f0f0;
+}
+
+    </style>
+  </head>
+  <body>
+
+<div>
+  <canvas></canvas>
+</div>
+
+    <script>
+
+const canvasSize = 320;
+const dotSizes = [32, 16, 8, 16];
+
+const canvas = document.querySelector('canvas');
+canvas.width = canvas.height = canvasSize;
+const context = canvas.getContext('2d');
+
+const dotSizesLength = dotSizes.length - 1;
+let currentDotSizeIndex = 0;
+let currentDotSize      = dotSizes[currentDotSizeIndex];
+let currentLength       = canvasSize - currentDotSize;
+let currentX = 0;
+let currentY = 0;
+setInterval(() => {
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+  context.fillStyle = `rgb(${r},${g},${b})`;
+  context.fillRect(currentX, currentY, currentDotSize, currentDotSize);
+  if(currentX < currentLength) {
+    currentX += currentDotSize;
+  }
+  else {
+    currentX = 0;
+    if(currentY < currentLength) {
+      currentY += currentDotSize;
+    }
+    else {
+      currentY = 0;
+      if(currentDotSizeIndex < currentLength) {
+        currentDotSizeIndex++;
+      }
+      else {
+        currentDotSizeIndex = 0;
+      }
+      currentDotSize = dotSizes[currentDotSizeIndex];
+      currentLength  = canvasSize - currentDotSize;
+    }
+  }
+}, 0);
+
+    </script>
+  </body>
+</html>
