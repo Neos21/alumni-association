@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>78co38zkOiiZ@</title>
+    <style>
+
+html,
+body {
+  height: 100%;
+  background: #000;
+}
+
+body {
+  display: grid;
+  place-content: center;
+  margin: 0;
+  overflow: hidden;
+}
+
+    </style>
+    <script>
+
+document.addEventListener('DOMContentLoaded', () => {
+  const width  = 800;
+  const height = 600;
+  const colours = ['#000', '#0f0', '#90f', '#70d', '#407', '#224', '#632', '#a41', '#f00', '#f52', '#f75', '#ea8', '#953', '#333', '#000'];
+  
+  const mandelbrot = document.getElementById('mandelbrot');
+  mandelbrot.width  = width;
+  mandelbrot.height = height;
+  mandelbrot.style.width  = `${width}px`;
+  mandelbrot.style.height = `${height}px`;
+  
+  const context = mandelbrot.getContext('2d');
+  for(let y = 0; y < height; y++) {
+    for(let x = 0; x < width; x++) {
+      const z = {
+        a: (x - 525) / 260,
+        b: (y - 300) / 220
+      };
+      let i = 0;
+      let z2 = z;
+      for(i = 0; i < colours.length - 1; i++) {
+        z2 = {
+          a: z2.a * z2.a - z2.b * z2.b + z.a,
+          b: 2 * z2.a * z2.b + z.b
+        };
+        if(z2.a * z2.a + z2.b * z2.b > 4) break;
+      }
+      context.fillStyle = colours[i];
+      context.fillRect(x, y, 1, 1);
+    }
+  }
+});
+
+    </script>
+  </head>
+  <body>
+
+<canvas id="mandelbrot"></canvas>
+
+  </body>
+</html>
