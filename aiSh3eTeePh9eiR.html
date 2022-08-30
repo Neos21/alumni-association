@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Vo2Miuqu314!</title>
+    <style>
+
+:root {
+  --colour-background: #000;
+  --colour-base      : #0f0;
+  --colour-x         : #f00;
+  --colour-o         : #07f;
+  --colour-drawn     : #666;
+}
+
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow: hidden;
+  height: 100%;
+  color: var(--colour-base);
+  font-size: 4rem;
+  font-weight: bold;
+  font-family: sans-serif;
+  line-height: 1;
+  background: var(--colour-background);
+  user-select: none;
+  cursor: default;
+}
+
+body {
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+}
+
+#game {
+  height: 100%;
+  display: grid;
+  grid-template-rows   : repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: var(--colour-base);;
+}
+#game.x     { background: var(--colour-x    ); }
+#game.o     { background: var(--colour-o    ); }
+#game.drawn { background: var(--colour-drawn); }
+
+#game > div {
+  background: var(--colour-background);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+span.x { color: var(--colour-x); }
+span.o { color: var(--colour-o); }
+#game.drawn span { color: var(--colour-drawn); }  /* Prioritised */
+
+    </style>
+    <script>
+
+document.addEventListener('DOMContentLoaded', () => {
+  
+  // States
+  // ================================================================================
+  
+  let isXTurn      = null;
+  let turnCount    = null;
+  let isSolvedTurn = null;
+  
+  
+  // Functions
+  // ================================================================================
+  
+  const getParamValue = (paramValue, defaultValue) => {
+    if(paramValue == null || paramValue.trim() === '') return defaultValue;
+    const intParamValue = Math.trunc(paramValue);  // Parse Integer
+    return Number.isNaN(intParamValue) || intParamValue < 0 ? defaultValue : intParamValue;
+  };
+  const getRandomNumber = (min = 0, max = 2) => Math.floor(Math.random() * (max - min + 1) + min);
+  
+  // Get Current X O
+  const getCurrentMark = () => isXTurn ? '×' : '○';
+  const getCurrentXO   = () => isXTurn ? 'x'  : 'o' ;
+  
+  // Check Is Solved
+  const isSolved = () => {
+    const currentMark = getCurrentMark();
+    const isMatched = elements => {
+      if(!elements.every(element => element.textContent.trim() === currentMark)) return false;
+      document.getElementById('game').classList.add(getCurrentXO());
+      isSolvedTurn = true;
+      return true;
+    };
+    // Top Left To Bottom Right, Top Right To Bottom Left
+    if(isMatched([document.querySelector('[data-row="0"][data-col="0"]'), document.querySelector('[data-row="1"][data-col="1"]'), document.querySelector('[data-row="2"][data-col="2"]')])) return true;
+    if(isMatched([document.querySelector('[data-row="0"][data-col="2"]'), document.querySelector('[data-row="1"][data-col="1"]'), document.querySelector('[data-row="2"][data-col="0"]')])) return true;
+    for(let i = 0; i <= 2; i++) {  // 3 Rows, 3 Cols
+      if(isMatched([...document.querySelectorAll(`[data-row="${i}"]`)])) return true;
+      if(isMatched([...document.querySelectorAll(`[data-col="${i}"]`)])) return true;
+    }
+    return false;
+  };
+  
+  
+  // Query Parameters
+  // ================================================================================
+  
+  const params = [...new URLSearchParams(location.search)].reduce((acc, pair) => ({...acc, [pair[0]]: pair[1]}), {});
+  
+  const loopMs  = getParamValue(params.loop , 200);
+  const pauseMs = getParamValue(params.pause, 700);
+  console.log(`Loop [${loopMs}] : Pause [${pauseMs}]`);
+  
+  
+  // Start Tic Tac Toe
+  // ================================================================================
+  
+  const reset = () => {
+    isXTurn      = Boolean(getRandomNumber(0, 1));  // Select First Turn : True is X, False is O
+    turnCount    = 0;
+    isSolvedTurn = false;
+    document.getElementById('game').removeAttribute('class');
+    document.querySelectorAll('span').forEach(element => {
+      element.removeAttribute('class');  // Remove All Classes
+      element.textContent = '';
+    });
+  };
+  
+  const turn = async () => {
+    try {
+      if(isSolvedTurn) {
+        await new Promise(resolve => setTimeout(resolve, pauseMs));  // Wait
+        return reset();
+      }
+      
+      let selectedCell = null;
+      do {
+        const row = getRandomNumber(0, 2);  // 3 Rows
+        const col = getRandomNumber(0, 2);  // 3 Cols
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if(cell.textContent.trim() === '') selectedCell = cell;
+      } while(selectedCell == null);
+      selectedCell.classList.add(getCurrentXO());
+      selectedCell.textContent = getCurrentMark();
+      
+      // Is Solved
+      if(isSolved()) return;
+      
+      // Switch Turn
+      turnCount++;
+      if(turnCount >= 9) {
+        isSolvedTurn = true;  // For Reset
+        return document.getElementById('game').classList.add('drawn');
+      }
+      isXTurn = !isXTurn;
+    }
+    catch(error) {
+      console.error('Unexpected Error', error);
+      reset();
+    }
+    finally {
+      setTimeout(turn, loopMs);  // Loop
+    }
+  };
+  
+  // Start
+  reset();
+  turn();
+});
+
+    </script>
+  </head>
+  <body>
+
+<div id="game">
+  <div><span data-row="0" data-col="0"></span></div>
+  <div><span data-row="0" data-col="1"></span></div>
+  <div><span data-row="0" data-col="2"></span></div>
+  <div><span data-row="1" data-col="0"></span></div>
+  <div><span data-row="1" data-col="1"></span></div>
+  <div><span data-row="1" data-col="2"></span></div>
+  <div><span data-row="2" data-col="0"></span></div>
+  <div><span data-row="2" data-col="1"></span></div>
+  <div><span data-row="2" data-col="2"></span></div>
+</div>
+
+  </body>
+</html>
