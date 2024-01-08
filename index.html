@@ -1,43 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Alumni Association</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@neos21/neos-normalize@2.1.2/neos-normalize.min.css">
     <style>
 
-html {
-  color: black;
-  font-family: "Courier New", Courier, monospace;
-  word-break: break-all;
-  background: white;
+:root {
+  --nn-colour-green: #0f0;
+  
+  --nn-colour-base      : var(--nn-colour-green);
+  --nn-colour-background: var(--nn-colour-black);
 }
 
-p {
-  margin: 0;
+html {
+  font-family: var(--nn-font-family-monospace);
+          user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  max-width: 50rem;
+  margin: var(--nn-space-default) auto;
+  padding: 0 1rem;
+  text-align: center;
 }
 
 a {
-  color: blue;
+  color: inherit;
   text-decoration: none;
 }
 
 a:hover {
-  color: red;
-  text-decoration: underline;
+  color: var(--nn-colour-white);
+}
+
+.b83zT711q {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.powered-by {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+form {
+  margin: var(--nn-space-default) 0;
+  border: 1.2px solid #eee;
+  border-radius: 4px;
+  padding: var(--nn-space-tiny) var(--nn-space-default);
+}
+
+[type="text"], [type="password"], [type="submit"] {
+  display: block;
+  margin: var(--nn-space-small) 0;
+  width: 100%;
+  border-width: 1.2px;
+  border-color: #0c0;
+  font-size: 17px;
+  background: var(--nn-colour-background);
+}
+
+[type="text"]:hover, [type="text"]:focus, [type="password"]:hover, [type="password"]:focus, [type="submit"]:hover, [type="submit"]:focus {
+  border-color: var(--nn-colour-base);
+  outline: 0;
+}
+
+[type="submit"]:hover, [type="submit"]:focus {
+  background: inherit;
+}
+
+[type="submit"]:active {
+  border-color: #eee;
+  color: #eee;
+}
+
+[type="submit"]:disabled {
+  border-color: #999;
+  color: #999;
+  cursor: not-allowed;
+}
+
+[type="submit"]:disabled:hover {
+  border-color: #ccc;
+  color: #ccc;
+}
+
+::placeholder {
+  color: #060;
+}
+
+#result {
+  color: var(--nn-colour-red);
+  font-size: 1.5rem;
+  font-weight: bold;
+  animation: result 1s linear 2 normal;
+}
+
+@keyframes result {
+    0% { opacity: 1; }
+   49% { opacity: 1; }
+   50% { opacity: 0; }
+  100% { opacity: 0; }
 }
 
     </style>
+    <script>
+
+document.addEventListener('DOMContentLoaded', () => {
+  let isProcessing = false;
+  document.getElementById('form').addEventListener('submit', async event => {
+    try {
+      event.preventDefault();
+      if(isProcessing) return;
+      isProcessing = document.getElementById('form-submit').disabled = true;
+      document.getElementById('result')?.remove();
+      await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000 + 750)));
+      document.getElementById('form').insertAdjacentHTML('afterend', `<div id="result">&#65;&#67;&#67;&#69;&#83;&#83;&#32;&#68;&#69;&#78;&#73;&#69;&#68;</div>`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      isProcessing = document.getElementById('form-submit').disabled = false;
+    }
+    catch(error) {
+      console.error(error);
+    }
+  });
+});
+
+    </script>
   </head>
   <body>
 
-<!-- Created At -->
-<p>2022-08-30 <a href="aiSh3eTeePh9eiR.html">Vo2Miuqu314!</a></p>
-<p>2021-07-06 <a href="b6ggGxe4.html">78co38zkOiiZ@</a></p>
-<p>2021-04-03 <a href="Jqi3qJ9f3.html">Hj,,jfk</a></p>
-<p>2021-04-02 <a href="o7eLLwc6cn.html">Q:666</a></p>
-<p>2021-04-02 <a href="z2u4098bhw8.html">$[[[d</a></p>
-<p>2021-04-01 <a href="7h9dP9.html">a1sQuv3</a></p>
+<h1>Alumni Association</h1>
+
+<form id="form">
+  <input type="text"     id="form-identifier" value="" placeholder="Identifier">
+  <input type="password" id="form-credential" value="" placeholder="Credential">
+  <input type="submit"   id="form-submit"     value="Log In">
+</form>
+
+<div class="b83zT711q"><a href="./b83zT711q/">b83zT711q</a></div>
+<div class="powered-by"><a href="https://neos21.net/">Powered By</a></div>
 
   </body>
 </html>

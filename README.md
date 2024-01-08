@@ -1,6 +1,6 @@
-# [Alumni Association](http://alumni.g3.xrea.com/b83zT711q/)
+# [Alumni Association](http://alumni.g3.xrea.com/)
 
-[Alumni Association](https://neos21.github.io/alumni-association/)
+[Alumni Association (GitHub Pages)](https://neos21.github.io/alumni-association/)
 
 
 ## Links
