@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+Allow: /
+Sitemap: http://alumni.g3.xrea.com/sitemap.xml
