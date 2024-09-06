@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Alumni Association</title>
     <link rel="icon" href="favicon.ico">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@neos21/neos-normalize@2.1.2/neos-normalize.min.css">
     <link rel="canonical" href="http://alumni.g3.xrea.com/index.html">
     
     <meta name="google-site-verification" content="o9It_7_9BAUWLfDzlOBDQYTrQaRc67DR4nbe-9RiZxY">
@@ -14,22 +13,26 @@
     
     <style>
 
-:root {
-  --nn-colour-green: #0f0;
-  
-  --nn-colour-base      : var(--nn-colour-green);
-  --nn-colour-background: var(--nn-colour-black);
+* {
+  box-sizing: border-box;
 }
 
 html {
-  font-family: var(--nn-font-family-monospace);
+  overflow: hidden scroll;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 17px;
+          text-decoration-skip-ink: none;
+  -webkit-text-decoration-skip: objects;
+  background: #000;
+  cursor: default;
           user-select: none;
   -webkit-user-select: none;
 }
 
 body {
   max-width: 50rem;
-  margin: var(--nn-space-default) auto;
+  margin: 2rem auto;
   padding: 0 1rem;
   text-align: center;
 }
@@ -40,39 +43,47 @@ a {
 }
 
 a:hover {
-  color: var(--nn-colour-white);
+  color: #fff;
 }
 
-.b83zT711q {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+h1 {
+  margin: 4rem 0 2rem;
 }
 
 form {
-  margin: var(--nn-space-default) 0;
+  margin: 1rem 0;
   border: 1.2px solid #eee;
   border-radius: 4px;
-  padding: var(--nn-space-tiny) var(--nn-space-default);
+  padding: .5rem 1.5rem;
 }
 
-[type="text"], [type="password"], [type="submit"] {
+input {
+  -webkit-appearance: none;
   display: block;
-  margin: var(--nn-space-small) 0;
+  margin: 1.25rem 0;
   width: 100%;
-  border-width: 1.2px;
-  border-color: #0c0;
-  font-size: 17px;
-  background: var(--nn-colour-background);
-}
-
-[type="text"]:hover, [type="text"]:focus, [type="password"]:hover, [type="password"]:focus, [type="submit"]:hover, [type="submit"]:focus {
-  border-color: var(--nn-colour-base);
+  border: 1.2px solid #0c0;
+  border-radius: 4px;
+  padding: .3rem .6rem;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
   outline: 0;
 }
 
-[type="submit"]:hover, [type="submit"]:focus {
-  background: inherit;
+[type="submit"] {
+  font-weight: normal;
+  cursor: pointer;
+}
+
+::placeholder {
+  color: #060;
+}
+
+input:hover,
+input:focus {
+  border-color: #0f0;
 }
 
 [type="submit"]:active {
@@ -80,8 +91,10 @@ form {
   color: #eee;
 }
 
-::placeholder {
-  color: #060;
+.b83zT711q {
+  position: absolute;
+  bottom: 0;
+  left: 0;
 }
 
     </style>
